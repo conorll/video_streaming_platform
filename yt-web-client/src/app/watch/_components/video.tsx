@@ -327,7 +327,6 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
         Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width;
 
       timeline.style.setProperty("--preview-position", String(percent));
-      console.log(percent);
 
       if (isScrubbing) {
         e.preventDefault();
@@ -492,7 +491,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
           controls={false}
           onClick={togglePlay}
           ref={videoRef}
-          src={`${videoPrefix}${videoResolution}-${videoObject.id}.mp4`}
+          src={`${videoPrefix}${videoResolution}-${videoObject.id}.${videoObject.fileExtension}`}
           onEnded={() => setIsPaused(true)}
         />
       </div>

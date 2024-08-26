@@ -59,7 +59,7 @@ export function convertVideo(
     ffmpeg(`${localRawVideoPath}/${rawVideoName}`)
       .outputOptions("-vf", `scale=-2:${resolution}`)
       .on("end", function () {
-        console.log(`${processedVideoName} processed successfuly`);
+        console.log(`${processedVideoName} processed successfully`);
         resolve();
       })
       .on("error", function (err: any) {
@@ -101,7 +101,7 @@ export async function downloadRawVideo(fileName: string) {
     });
 
   console.log(
-    `gs://${rawVideoBucketName}/${fileName} downloaded to ${localRawVideoPath}/${fileName}.`
+    `gs://${rawVideoBucketName}/${fileName} downloaded to ${localRawVideoPath}/${fileName}`
   );
 }
 
@@ -130,7 +130,7 @@ async function uploadFile(
     destination: fileName,
   });
   console.log(
-    `${filePath}/${fileName} uploaded to gs://${bucketName}/${fileName}.`
+    `${filePath}/${fileName} uploaded to gs://${bucketName}/${fileName}`
   );
 
   // Set the video to be publicly readable

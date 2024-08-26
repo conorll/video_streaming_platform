@@ -1,17 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { PubSub, Message } from "@google-cloud/pubsub";
+import { v1 } from "@google-cloud/pubsub";
+
 import processVideo from "./process-video";
 import { setupDirectories } from "./storage";
+
 import express from "express";
 
 const app = express();
 const port = 8080;
-
-const subscriptionName = process.env.PUBSUB_SUBSCRIPTION_NAME!;
-
-const pubSubClient = new PubSub();
 
 const supportedFormats = [
   "mp4",
@@ -26,50 +24,90 @@ const supportedFormats = [
   "3gp",
 ];
 
-function listenForMessages() {
-  const subscription = pubSubClient.subscription(subscriptionName, {
-    flowControl: {
-      maxMessages: 1,
-    },
-  });
+const subscription = process.env.PUBSUB_SUBSCRIPTION!;
+const subClient = new v1.SubscriberClient();
 
-  const messageHandler = async (message: Message) => {
-    console.log(`Message recieved`);
+async function processMessageAsync(message: any) {
+  console.log(`Message recieved`);
 
-    const data = JSON.parse(message.data.toString());
-    const inputFileName = data.name;
+  const rawData = message.message?.data?.toString();
+  const data = rawData ? JSON.parse(rawData) : null;
+  const inputFileName = data?.name;
 
-    if (!inputFileName) {
-      message.nack();
-      console.error(`Error: Message is missing filename`);
-      return;
-    }
+  if (!inputFileName) {
+    throw new Error(`Error: Message is missing filename`);
+  }
 
-    const fileExtension = inputFileName.split(".").pop()?.toLowerCase();
+  const fileExtension = inputFileName.split(".").pop()?.toLowerCase();
 
-    if (!fileExtension || !supportedFormats.includes(fileExtension)) {
-      message.nack();
-      console.error(
-        `Unsupported file format: ${fileExtension}. Supported formats: ${supportedFormats.join(
-          ", "
-        )}`
-      );
-      return;
-    }
+  if (!fileExtension || !supportedFormats.includes(fileExtension)) {
+    throw new Error(
+      `Unsupported file format: ${fileExtension}. Supported formats: ${supportedFormats.join(
+        ", "
+      )}`
+    );
+  }
 
-    try {
-      await processVideo(inputFileName);
-    } catch (error) {
-      message.nack();
-      console.error(`Error processing video`, error);
-      return;
-    }
+  await processVideo(inputFileName);
+  console.log(`Video: ${inputFileName} processed successfully`);
+}
 
-    message.ack();
-    console.log(`Successfuly proccessed video: ${inputFileName}`);
+async function synchronousPullWithLeaseManagement() {
+  const maxMessages = 1;
+  const newAckDeadlineSeconds = 600;
+  const request = {
+    subscription,
+    maxMessages,
+    allowExcessMessages: false,
   };
 
-  subscription.on("message", messageHandler);
+  while (true) {
+    let isProcessed = false;
+    let isError = false;
+    const [response] = await subClient.pull(request);
+    const message = response.receivedMessages?.[0];
+
+    if (!message) {
+      console.log("No messages received. Waiting before next pull...");
+      await new Promise((r) => setTimeout(r, 600000)); // Wait for 10 minutes
+      continue;
+    }
+
+    processMessageAsync(message)
+      .then(async () => {
+        await subClient.acknowledge({
+          subscription,
+          ackIds: [message.ackId as string],
+        });
+        console.log(`Message acknowledged successfully`);
+        isProcessed = true;
+      })
+      .catch((error) => {
+        console.error("Error processing video:", error);
+        isError = true;
+      });
+
+    while (true) {
+      await new Promise((r) => setTimeout(r, 300000)); // Wait for 5 minutes
+      if (isProcessed || isError) {
+        break;
+      } else {
+        const modifyAckRequest = {
+          subscription,
+          ackIds: [message.ackId as string],
+          ackDeadlineSeconds: newAckDeadlineSeconds,
+        };
+
+        await subClient.modifyAckDeadline(modifyAckRequest).catch((error) => {
+          console.error("Error modifying acknowledgement deadline:", error);
+        });
+
+        console.log(
+          `Message acknowledgement deadline reset to ${newAckDeadlineSeconds}s`
+        );
+      }
+    }
+  }
 }
 
 app.get("/", (req, res) => {
@@ -79,5 +117,5 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   setupDirectories();
-  listenForMessages();
+  synchronousPullWithLeaseManagement();
 });

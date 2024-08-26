@@ -74,6 +74,10 @@ function Upload() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+    },
   });
 
   return (
@@ -89,7 +93,7 @@ function Upload() {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                {/* ...field gives the input is given a random id */}
+                {/* ...field gives the input a random id */}
                 <Input {...field} />
               </FormControl>
               <FormMessage />

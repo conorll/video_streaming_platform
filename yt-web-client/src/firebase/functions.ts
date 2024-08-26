@@ -33,6 +33,7 @@ export interface Video {
   title: string;
   description: string;
   resolution: number;
+  fileExtension: string;
   userId: string;
   userEmail: string;
   userPhotoUrl: string;

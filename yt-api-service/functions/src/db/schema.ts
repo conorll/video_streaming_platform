@@ -25,4 +25,5 @@ export const videos = pgTable("videos", {
     .references(() => users.id),
   resolution: integer("resolution"),
   processed: boolean("processed").default(false).notNull(),
+  fileExtension: varchar("fileExtension", { length: 20 }).notNull(),
 });

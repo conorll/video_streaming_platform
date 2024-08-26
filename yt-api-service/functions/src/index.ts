@@ -119,7 +119,7 @@ export const generateUploadUrl = onCall(v2FunctionsOptions, async (request) => {
     expires: Date.now() + 15 * 60 * 1000, // 15 minutes
   });
 
-  await createVideo(videoId, title, description, auth.uid);
+  await createVideo(videoId, title, description, fileExtension, auth.uid);
 
   return { url, fileName };
 });

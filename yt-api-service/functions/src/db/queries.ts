@@ -18,12 +18,14 @@ export async function createVideo(
   id: string,
   title: string,
   description: string,
+  fileExtension: string,
   userId: string
 ) {
   await db.insert(videos).values({
     id,
     title,
     description,
+    fileExtension,
     processed: false,
     userId,
   });
@@ -35,6 +37,7 @@ export async function getVideosQuery() {
       id: videos.id,
       title: videos.title,
       description: videos.description,
+      fileExtension: videos.fileExtension,
       resolution: videos.resolution,
       userId: users.id,
       userEmail: users.email,
@@ -53,6 +56,7 @@ export async function getVideoQuery(id: string) {
       id: videos.id,
       title: videos.title,
       description: videos.description,
+      fileExtension: videos.fileExtension,
       resolution: videos.resolution,
       userId: users.id,
       userEmail: users.email,

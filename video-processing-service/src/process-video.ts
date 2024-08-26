@@ -1,4 +1,4 @@
-import { setVideoProcessed, setVideoResolution } from "./db/queries";
+import { updateVideoAfterProcessing } from "./db/queries";
 import {
   convertVideo,
   deleteProcessedVideoFile,
@@ -28,29 +28,30 @@ async function deleteProcessedVideo(
   videoId: string,
   resolution: string
 ) {
-  try {
-    await deleteProcessedVideoFile(outputFileName);
-  } catch (error) {
+  await deleteProcessedVideoFile(outputFileName).catch((error) => {
     console.error(
-      `Error: failed to delete processed video: ${videoId} in resolution: ${resolution}p`
+      `Nonfatal error: failed to delete processed video: ${videoId} in resolution: ${resolution}p`,
+      error
     );
-  }
+  });
 }
 
 async function deleteThumbnail(thumbnailFileName: string, videoId: string) {
-  try {
-    await deleteThumbnailFile(thumbnailFileName);
-  } catch (error) {
-    console.error(`Error: failed to delete thumbnail of video: ${videoId}`);
-  }
+  await deleteThumbnailFile(thumbnailFileName).catch((error) => {
+    console.error(
+      `Nonfatal error: failed to delete thumbnail of video: ${videoId}`,
+      error
+    );
+  });
 }
 
 async function deleteRawVideo(inputFileName: string, videoId: string) {
-  try {
-    await deleteRawVideoFile(inputFileName);
-  } catch (error) {
-    console.error(`Error: failed to delete raw video: ${videoId}`);
-  }
+  await deleteRawVideoFile(inputFileName).catch((error) => {
+    console.error(
+      `Nonfatal error: failed to delete raw video: ${videoId}`,
+      error
+    );
+  });
 }
 
 export default async function processVideo(inputFileName: string) {
@@ -91,8 +92,7 @@ export default async function processVideo(inputFileName: string) {
     await deleteThumbnail(thumbnailFileName, videoId);
     await deleteRawVideo(inputFileName, videoId);
 
-    await setVideoResolution(videoId, videoResolution);
-    await setVideoProcessed(videoId);
+    await updateVideoAfterProcessing(videoId, videoResolution);
   } catch (error) {
     await deleteRawVideo(inputFileName, videoId);
     throw error;
