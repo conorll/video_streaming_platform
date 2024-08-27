@@ -87,25 +87,22 @@ async function synchronousPullWithLeaseManagement() {
         isError = true;
       });
 
-    while (true) {
+    const modifyAckRequest = {
+      subscription,
+      ackIds: [message.ackId as string],
+      ackDeadlineSeconds: newAckDeadlineSeconds,
+    };
+
+    while (!isProcessed && !isError) {
+      await subClient.modifyAckDeadline(modifyAckRequest).catch((error) => {
+        console.error("Error modifying acknowledgement deadline:", error);
+      });
+
+      console.log(
+        `Message acknowledgement deadline reset to ${newAckDeadlineSeconds}s`
+      );
+
       await new Promise((r) => setTimeout(r, 300000)); // Wait for 5 minutes
-      if (isProcessed || isError) {
-        break;
-      } else {
-        const modifyAckRequest = {
-          subscription,
-          ackIds: [message.ackId as string],
-          ackDeadlineSeconds: newAckDeadlineSeconds,
-        };
-
-        await subClient.modifyAckDeadline(modifyAckRequest).catch((error) => {
-          console.error("Error modifying acknowledgement deadline:", error);
-        });
-
-        console.log(
-          `Message acknowledgement deadline reset to ${newAckDeadlineSeconds}s`
-        );
-      }
     }
   }
 }
