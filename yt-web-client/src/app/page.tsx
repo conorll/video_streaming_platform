@@ -16,11 +16,12 @@ export default async function Home() {
           <div>
             <Link href={`/watch?v=${video.id}`}>
               <Image
-                className="rounded-xl"
+                className="rounded-xl aspect-video"
                 src={thumbnailPrefix + video.id + ".png"}
                 alt="Video"
                 width={640}
                 height={360}
+                placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8XA8AAksBZG7LpHYAAAAASUVORK5CYII="
               />
             </Link>
             <div className="flex p-3 gap-3 items-start">

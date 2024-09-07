@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import Linkify from "linkify-react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +62,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
 
   const timelineRef = useRef(null);
 
-  const [isPaused, setIsPaused] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTheatreMode, setIsTheatreMode] = useState(false);
   const [isInMiniplayer, setIsInMiniplayer] = useState(false);
@@ -190,6 +192,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
     switch (e.key.toLowerCase()) {
       case " ":
         if (tagName === "button") return;
+        e.preventDefault();
       case "k":
         togglePlay();
         break;
@@ -364,7 +367,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
       >
         <div
           ref={overlayRef}
-          className={`flex flex-col absolute w-full h-full z-10 ${
+          className={`flex flex-col absolute w-full h-full z-10 bg-gradient-to-t from-black/50 via-transparent ${
             recentUserInput ||
             isQualityDropdownOpen ||
             isPaused ||
@@ -424,15 +427,12 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
                 <DropdownMenuTrigger className="px-0.5">
                   <QualitySVG />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="top"
-                  className="quality-dropdown w-48"
-                >
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      Playback speed
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
+                <DropdownMenuPortal container={videoContainerRef.current}>
+                  <DropdownMenuContent side="top" className="w-48">
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        Playback speed
+                      </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
                         <DropdownMenuRadioGroup
                           value={playbackSpeed}
@@ -445,11 +445,9 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
                           ))}
                         </DropdownMenuRadioGroup>
                       </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
                         <DropdownMenuRadioGroup
                           value={videoResolution}
@@ -466,9 +464,9 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
                             ))}
                         </DropdownMenuRadioGroup>
                       </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                </DropdownMenuContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
               </DropdownMenu>
               <button onClick={toggleMiniplayer}>
                 <MiniplayerSVG />
@@ -493,6 +491,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
           ref={videoRef}
           src={`${videoPrefix}${videoResolution}-${videoObject.id}.${videoObject.fileExtension}`}
           onEnded={() => setIsPaused(true)}
+          autoPlay
         />
       </div>
       <div className={`flex flex-col gap-3 ${isTheatreMode ? "px-5" : ""}`}>
@@ -509,9 +508,11 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
             {videoObject.userEmail}
           </a>
         </div>
-        <p className="text-sm bg-zinc-100 p-5 rounded-xl break-words">
-          {videoObject.description}
-        </p>
+        <Linkify>
+          <p className="text-sm bg-zinc-100 p-5 rounded-xl whitespace-pre-wrap description">
+            {videoObject.description}
+          </p>
+        </Linkify>
       </div>
     </main>
   );
