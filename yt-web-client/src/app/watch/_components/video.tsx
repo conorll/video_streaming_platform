@@ -62,7 +62,7 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
 
   const timelineRef = useRef(null);
 
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTheatreMode, setIsTheatreMode] = useState(false);
   const [isInMiniplayer, setIsInMiniplayer] = useState(false);
@@ -491,7 +491,6 @@ const Video: React.FC<VideoProps> = ({ videoObject }) => {
           ref={videoRef}
           src={`${videoPrefix}${videoResolution}-${videoObject.id}.${videoObject.fileExtension}`}
           onEnded={() => setIsPaused(true)}
-          autoPlay
         />
       </div>
       <div className={`flex flex-col gap-3 ${isTheatreMode ? "px-5" : ""}`}>
